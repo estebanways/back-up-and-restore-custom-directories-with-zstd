@@ -2,7 +2,7 @@
 
 🛠️ Compresses specified directories ...
 
-## Key Improvements:
+## Key Improvements
 
 Faster Compression – zstd is significantly faster than gzip while maintaining good compression ratios.
 
@@ -12,7 +12,7 @@ Error Logging – Still logs errors to dirs.log.
 
 Cleaner Script – Uses an array (dirs) for better readability.
 
-## Optional Enhancements:
+## Optional Enhancements
 
 Adjust Compression Level (default is 3, but you can set -3 to -19 or --fast):
 
@@ -99,7 +99,9 @@ No output = identical files.
 
 Warning: This is slow for large backups.
 
-## Here’s a step-by-step guide to extracting your Zstandard-compressed backup (dirs_backup.tar.zst) safely, with options for partial extraction, permission fixes, and error handling.
+## Extracting Guide
+
+Here’s a step-by-step guide to extracting your Zstandard-compressed backup (dirs_backup.tar.zst) safely, with options for partial extraction, permission fixes, and error handling.
 
 1. Basic Extraction (All Files)
 
