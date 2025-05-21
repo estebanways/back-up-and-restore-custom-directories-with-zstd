@@ -229,11 +229,11 @@ sudo tar -cv --use-compress-program="pzstd -9 --dict=mydict.zstdict -T0" -f "$ba
 
 4. Dictionary Management Best Practices
 
-- Store the dictionary with your backups: The same dictionary must be used for compression and decompression
+  - Store the dictionary with your backups: The same dictionary must be used for compression and decompression
 
-- Update periodically: Refresh your dictionary every few months or when your data patterns change significanty
+  - Update periodically: Refresh your dictionary every few months or when your data patterns change significanty
 
-- Version your dictionaries: Include creation date in filename (e.g., mydict-20230715.zstdict)
+  - Version your dictionaries: Include creation date in filename (e.g., mydict-20230715.zstdict)
 
 5. Extracting with Dictionary
 
