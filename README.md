@@ -187,3 +187,116 @@ Use sudo for system dirs (e.g., /etc/).
 --use-compress-program=zstd must match the compression used during backup.
 
 For speed, add -T0 to use all CPU cores (e.g., zstd -T0).
+
+## Improving Backup and Extraction with Dictionaries in Zstd
+
+You can significantly improve both compression ratios and speed by using Zstandard's dictionary compression feature. Here's how to implement it in your backup system:
+
+### Dictionary Compression Benefits
+
+1. Better Compression: Especially effective when backing up similar data structures repeatedly
+
+2. Faster Compression: Dictionary allows the algorithm to work more efficiently
+
+3. Consistent Performance: Particularly beneficial for incremental backups
+
+### Implementation Guide
+
+1. Create a Dictionary
+
+First, train a dictionary on sample data that represents what you'll be backing up:
+
+```shell
+# Collect sample files (adjust paths as needed)
+find "${dirs[@]}" -type f -size -1M -exec cat {} + > samples.dat
+
+# Train dictionary (adjust size as needed, 100KB is often good)
+zstd --train -r "${dirs[@]}" -o mydict.zstdict --maxdict=100000
+
+```
+
+2. Modify Backup Command to Use Dictionary
+
+```shell
+sudo tar -cv --use-compress-program="zstd -9 --dict=mydict.zstdict" -f "$backup_file" "${dirs[@]}"
+```
+
+3. For Parallel Compression with Dictionary
+
+```shell
+sudo tar -cv --use-compress-program="pzstd -9 --dict=mydict.zstdict -T0" -f "$backup_file" "${dirs[@]}"
+```
+
+4. Dictionary Management Best Practices
+
+- Store the dictionary with your backups: The same dictionary must be used for compression and decompression
+
+- Update periodically: Refresh your dictionary every few months or when your data patterns change significanty
+
+- Version your dictionaries: Include creation date in filename (e.g., mydict-20230715.zstdict)
+
+5. Extracting with Dictionary
+
+```shell
+# Basic extraction
+sudo tar -xvf dirs_backup.tar.zst --use-compress-program="zstd --dict=mydict.zstdict" -C restored_backup
+
+# For parallel decompression
+sudo tar -xvf dirs_backup.tar.zst --use-compress-program="pzstd --dict=mydict.zstdict -T0" -C restored_backup
+
+```
+
+### Advanced Dictionary Techniques
+
+1. Multiple Dictionaries: Create specialized dictionaries for different data types
+
+```shell
+# Config files dictionary
+find /etc/ -type f -exec cat {} + | zstd --train -o etc-dict.zstdict
+
+# User data dictionary
+find "$HOME" -type f -exec cat {} + | zstd --train -o home-dict.zstdict
+
+```
+
+2. Dictionary Chain Loading: For mixed content
+
+```shell
+zstd -9 --dict=etc-dict.zstdict --dict=home-dict.zstdict
+```
+
+3. Automated Dictionary Selection: Script to choose dictionary based on content
+
+```shell
+# In your backup command:
+dict_to_use=$(select_appropriate_dict.sh "${dirs[@]}")
+sudo tar -cv --use-compress-program="zstd -9 --dict=$dict_to_use" -f "$backup_file" "${dirs[@]}"
+
+```
+
+### Verification with Dictionaries
+
+When verifying your backups, include the dictionary:
+
+```shell
+# Test archive integrity
+zstd -t --dict=mydict.zstdict dirs_backup.tar.zst
+
+# List contents
+tar -tvf dirs_backup.tar.zst --use-compress-program="zstd --dict=mydict.zstdict"
+
+```
+
+### Performance Considerations
+
+Performance Considerations
+
+- Dictionary size: Typically 100KB-1MB is sufficient
+- Training data: Should be representative but doesn't need to be exhaustive
+- Memory usage: Larger dictionaries require more RAM during compression/decompression
+
+By implementing dictionary compression, you can expect:
+
+- 10-30% better compression ratios for similar data
+- 5-15% faster compression times
+- More consistent performance across backups
